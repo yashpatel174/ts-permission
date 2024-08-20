@@ -5,7 +5,7 @@ import {
   getSingleModule,
   updateModule,
   deleteModule,
-} from "../controller/moduleController";
+} from "../controller/moduleController.js";
 
 const router = express.Router();
 

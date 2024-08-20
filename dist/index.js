@@ -2,9 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
-// import userRoute from "./route/userRoute";
-// import groupRoute from "./route/groupRoute";
-import moduleRoute from "./route/moduleRoute";
+import userRoute from "./route/userRoute.js";
+import groupRoute from "./route/groupRoute.js";
+import moduleRoute from "./route/moduleRoute.js";
 // import dataRoute from "./route/dataRoute";
 dotenv.config();
 const app = express();
@@ -17,6 +17,8 @@ mongoose
     .then(() => console.log("Connected to MongoDB."));
 //* Routes
 app.use("/modules", moduleRoute);
+app.use("/groups", groupRoute);
+app.use("/users", userRoute);
 //* Listening on port
 const port = parseInt(process.env.PORT) || 8080;
 app.listen(port, () => {

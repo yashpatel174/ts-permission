@@ -19,3 +19,8 @@ const userPermission: mongoose.Schema<IUserPermission> = new mongoose.Schema({
     },
   ],
 });
+
+export default mongoose.model<IUserPermission>(
+  "UserPermission",
+  userPermission
+);

@@ -1,4 +1,4 @@
-import moduleSchema from "../model/moduleSchema.ts";
+import moduleSchema from "../model/moduleSchema.js";
 const createModule = async (req, res) => {
     const { moduleName, moduleNumber } = req.body;
     if (!moduleName || !moduleNumber)
@@ -11,13 +11,13 @@ const createModule = async (req, res) => {
         await module.save();
         if (!module)
             return res.send({ message: "Module not created." });
-        res.status(200).send({
+        return res.status(200).send({
             success: true,
-            message: `Module You created modle: ${module.moduleName}.`,
+            message: `You created modle: ${module.moduleName}.`,
         });
     }
     catch (error) {
-        res.status(500).send({
+        return res.status(500).send({
             success: false,
             message: "Error creating module.",
             error: error.message,
@@ -29,10 +29,10 @@ const getAllModules = async (req, res) => {
         const modules = await moduleSchema.find({});
         if (!modules)
             return res.send({ message: "There are no modules." });
-        res.status(200).send(modules);
+        return res.status(200).send(modules);
     }
     catch (error) {
-        res.status(500).send({
+        return res.status(500).send({
             success: false,
             message: "Error fetching modules.",
             error: error.message,
@@ -49,14 +49,14 @@ const getSingleModule = async (req, res) => {
         const module = await moduleSchema.findOne({ moduleName });
         if (!module)
             res.send({ message: "Module not found." });
-        res.status(200).send({
+        return res.status(200).send({
             success: true,
             message: `You got the module: ${moduleName}.`,
             module,
         });
     }
     catch (error) {
-        res.status(500).send({
+        return res.status(500).send({
             success: false,
             message: "Error fetching the module.",
             error: error.message,
@@ -77,14 +77,14 @@ const updateModule = async (req, res) => {
         const newModule = await moduleSchema.findOneAndUpdate({ moduleName }, { moduleName: newName, moduleNumber: newNumber }, { new: true, runValidators: true });
         if (!newModule)
             return res.send({ message: "Module not updated yet." });
-        res.status(200).send({
+        return res.status(200).send({
             success: true,
             message: `Module updated successfully.`,
             newModule,
         });
     }
     catch (error) {
-        res.status(500).send({
+        return res.status(500).send({
             success: false,
             message: "Error updating the module.",
             error: error.message,
@@ -104,13 +104,13 @@ const deleteModule = async (req, res) => {
         const deleteM = await moduleSchema.findOneAndDelete({ moduleName });
         if (!deleteM)
             res.status(404).send({ message: "Module not deleted" });
-        res.status(200).send({
+        return res.status(200).send({
             success: true,
             message: `Module deleted successfully.`,
         });
     }
     catch (error) {
-        res.status(500).send({
+        return res.status(500).send({
             success: false,
             message: "Error deleting the module.",
             error: error.message,

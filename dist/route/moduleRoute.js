@@ -1,5 +1,5 @@
 import express from "express";
-import { createModule, getAllModules, getSingleModule, updateModule, deleteModule, } from "../controller/moduleController";
+import { createModule, getAllModules, getSingleModule, updateModule, deleteModule, } from "../controller/moduleController.js";
 const router = express.Router();
 router.post("/create", createModule);
 router.get("/", getAllModules);
