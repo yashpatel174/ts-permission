@@ -65,10 +65,10 @@ const removeGroup = async (req, res) => {
             return res.send({
                 message: "This group can't be deleted as this group contains members.",
             });
-        const deletedGroup = groupSchema.findOneAndDelete({ groupName });
+        const deletedGroup = await groupSchema.findOneAndDelete({ groupName });
         return res.status(200).send({
             success: true,
-            message: `You deleted the group: ${deletedGroup}`,
+            message: `You deleted the group: ${groupName}`,
         });
     }
     catch (error) {
@@ -87,8 +87,10 @@ const addUsers = async (req, res) => {
     }
     try {
         // Find the group and user
-        const group = await groupSchema.findOne({ groupName }).exec();
-        const user = await userSchema.findOne({ userName }).exec();
+        const group = (await groupSchema
+            .findOne({ groupName })
+            .exec());
+        const user = (await userSchema.findOne({ userName }).exec());
         // Check if group and user exist
         if (!group) {
             return res.status(404).send({ message: "Group not found." });
@@ -99,12 +101,12 @@ const addUsers = async (req, res) => {
         // Add user to the group if not already present
         if (!group.members?.includes(user._id)) {
             group.members?.push(user._id);
-            await group.save(); // Save the updated group
+            group.save(); // Save the updated group
         }
         // Add group to the user's group if not already present
         if (!user.group?.includes(group._id)) {
             user.group?.push(group._id);
-            await user.save(); // Save the updated user
+            user.save(); // Save the updated user
         }
         return res.status(200).send({
             success: true,
@@ -127,8 +129,10 @@ const removeUsers = async (req, res) => {
     }
     try {
         // Find the group and user
-        const group = await groupSchema.findOne({ groupName }).exec();
-        const user = await userSchema.findOne({ userName }).exec();
+        const group = (await groupSchema
+            .findOne({ groupName })
+            .exec());
+        const user = (await userSchema.findOne({ userName }).exec());
         // Check if group and user exist
         if (!group) {
             return res.status(404).send({ message: "Group not found." });
@@ -294,7 +298,7 @@ const removeGroupPermission = async (req, res) => {
             return res.status(404).send({
                 message: "This permission is not provided for this moduleId.",
             });
-        const removePermission = await permissionSchema.findOneAndDelete({
+        await permissionSchema.findOneAndDelete({
             moduleId: module._id,
             permissions,
         });

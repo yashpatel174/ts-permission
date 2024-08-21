@@ -3,11 +3,11 @@ import userSchema from "../model/userSchema.js";
 import permissionSchema from "../model/permissionSchema.js";
 import moduleSchema from "../model/moduleSchema.js";
 import groupPermission from "../model/groupPermission.js";
-import { Request, Response } from "express";
+import { Request, Response, RequestHandler } from "express";
 
 interface GroupType {
-  groupName?: string;
-  permission?: [string];
+  groupName: string;
+  permission: [string];
 }
 
 interface GroupMember {
@@ -21,7 +21,19 @@ interface GroupPermission {
   permissions: string[];
 }
 
-const createGroup = async (
+interface User {
+  _id: string;
+  userName: string;
+  group: string[];
+}
+
+interface Group {
+  _id: string;
+  groupName: string;
+  members: string[];
+}
+
+const createGroup: RequestHandler<GroupType> = async (
   req: Request<GroupType>,
   res: Response
 ): Promise<Response> => {
@@ -55,7 +67,10 @@ const createGroup = async (
   }
 };
 
-const getAllGroups = async (req: Request, res: Response): Promise<Response> => {
+const getAllGroups: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const groups = await groupSchema.find({});
     if (!groups)
@@ -76,7 +91,7 @@ const getAllGroups = async (req: Request, res: Response): Promise<Response> => {
   }
 };
 
-const removeGroup = async (
+const removeGroup: RequestHandler<GroupType> = async (
   req: Request<GroupType>,
   res: Response
 ): Promise<Response> => {
@@ -96,11 +111,11 @@ const removeGroup = async (
         message: "This group can't be deleted as this group contains members.",
       });
 
-    const deletedGroup = groupSchema.findOneAndDelete({ groupName });
+    const deletedGroup = await groupSchema.findOneAndDelete({ groupName });
 
     return res.status(200).send({
       success: true,
-      message: `You deleted the group: ${deletedGroup}`,
+      message: `You deleted the group: ${groupName}`,
     });
   } catch (error) {
     return res.status(500).send({
@@ -111,7 +126,7 @@ const removeGroup = async (
   }
 };
 
-const addUsers = async (
+const addUsers: RequestHandler<GroupMember> = async (
   req: Request<GroupMember>,
   res: Response
 ): Promise<Response> => {
@@ -124,8 +139,10 @@ const addUsers = async (
 
   try {
     // Find the group and user
-    const group = await groupSchema.findOne({ groupName }).exec();
-    const user = await userSchema.findOne({ userName }).exec();
+    const group = (await groupSchema
+      .findOne({ groupName })
+      .exec()) as Group | null;
+    const user = (await userSchema.findOne({ userName }).exec()) as User | null;
 
     // Check if group and user exist
     if (!group) {
@@ -138,13 +155,13 @@ const addUsers = async (
     // Add user to the group if not already present
     if (!group.members?.includes(user._id)) {
       group.members?.push(user._id);
-      await group.save(); // Save the updated group
+      group.save(); // Save the updated group
     }
 
     // Add group to the user's group if not already present
     if (!user.group?.includes(group._id)) {
       user.group?.push(group._id);
-      await user.save(); // Save the updated user
+      user.save(); // Save the updated user
     }
 
     return res.status(200).send({
@@ -160,7 +177,7 @@ const addUsers = async (
   }
 };
 
-const removeUsers = async (
+const removeUsers: RequestHandler<GroupMember> = async (
   req: Request<GroupMember>,
   res: Response
 ): Promise<Response> => {
@@ -173,8 +190,10 @@ const removeUsers = async (
 
   try {
     // Find the group and user
-    const group = await groupSchema.findOne({ groupName }).exec();
-    const user = await userSchema.findOne({ userName }).exec();
+    const group = (await groupSchema
+      .findOne({ groupName })
+      .exec()) as Group | null;
+    const user = (await userSchema.findOne({ userName }).exec()) as User | null;
 
     // Check if group and user exist
     if (!group) {
@@ -209,7 +228,7 @@ const removeUsers = async (
   }
 };
 
-const provideGroupPermission = async (
+const provideGroupPermission: RequestHandler<GroupPermission> = async (
   req: Request<GroupPermission>,
   res: Response
 ): Promise<Response> => {
@@ -338,7 +357,7 @@ const provideGroupPermission = async (
 //   }
 // };
 
-const removeGroupPermission = async (
+const removeGroupPermission: RequestHandler<GroupPermission> = async (
   req: Request<GroupPermission>,
   res: Response
 ): Promise<Response> => {
@@ -371,7 +390,7 @@ const removeGroupPermission = async (
         message: "This permission is not provided for this moduleId.",
       });
 
-    const removePermission = await permissionSchema.findOneAndDelete({
+    await permissionSchema.findOneAndDelete({
       moduleId: module._id,
       permissions,
     });

@@ -2,13 +2,17 @@ import moduleSchema from "../model/moduleSchema.js";
 import { Request, Response } from "express";
 
 interface ModuleTypes {
-  moduleName?: string;
-  moduleNumber?: number;
+  moduleName: string;
+  moduleNumber: number;
 }
 
 interface UpdateModule {
   newName: string;
   newNumber: number;
+}
+
+interface DelModule {
+  moduleName: string;
 }
 
 const createModule = async (
@@ -125,7 +129,7 @@ const updateModule = async (
 };
 
 const deleteModule = async (
-  req: Request<ModuleTypes>,
+  req: Request<DelModule>,
   res: Response
 ): Promise<Response> => {
   const { moduleName } = req.params;
