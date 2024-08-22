@@ -1,8 +1,9 @@
 import moduleSchema from "../model/moduleSchema.js";
+import groupSchema from "../model/groupSchema.js";
 import permissionSchema from "../model/permissionSchema.js";
 import groupPermission from "../model/groupPermission.js";
 import userPermission from "../model/userPermission.js";
-const checkPermission = (requiredPermission, getModuleName) => async (req, res, next) => {
+const checkPermission = (requiredPermissions, getModuleName) => async (req, res, next) => {
     if (req.user?.role === "admin") {
         return next();
     }
@@ -10,6 +11,11 @@ const checkPermission = (requiredPermission, getModuleName) => async (req, res, 
     const userGroup = user?.group;
     const userId = user?._id;
     const moduleName = getModuleName(req);
+    if (!moduleName &&
+        (requiredPermissions.includes("Create") ||
+            requiredPermissions.includes("FindAll"))) {
+        return next();
+    }
     try {
         const module = await moduleSchema.findOne({ moduleName });
         if (!module) {
@@ -17,28 +23,33 @@ const checkPermission = (requiredPermission, getModuleName) => async (req, res, 
                 message: "You do not have the permission for this module.",
             });
         }
-        const permission = await permissionSchema
-            .findOne({
-            permissions: { $in: [requiredPermission] },
-            moduleId: module._id,
-        })
-            .populate({ path: "module", strictPopulate: false });
-        if (!permission) {
+        const group = await groupSchema.findOne({ _id: userGroup });
+        if (!group) {
             return res.status(403).send({
-                message: "This permission is not provided to this module.",
+                message: "Group not found.",
             });
         }
-        // Debugging: Log the values being used in the query
-        console.log("User Group:", userGroup);
-        console.log("Permission ID:", permission._id);
+        const permission = (await permissionSchema
+            .findOne({
+            permissions: { $in: requiredPermissions },
+            moduleId: module._id,
+        })
+            .populate({
+            path: "module",
+            strictPopulate: false,
+        }));
+        if (!permission) {
+            return res.status(403).send({
+                message: "Invalid Permission",
+            });
+        }
         const gPermission = await groupPermission.findOne({
-            groupId: userGroup,
+            groupId: group._id.toString(),
             permission: permission._id,
         });
-        console.log(gPermission, "000000000000");
-        // Debugging: Check if gPermission is null and log details
+        console.log(typeof group._id, "00000000000000");
+        console.log(permission._id, "1111111111111");
         if (!gPermission) {
-            console.log("No groupPermission found for the given groupId and permission._id");
             return res.status(403).send({
                 message: "Permission is not provided to this group.",
             });

@@ -65,7 +65,7 @@ const removeGroup = async (req, res) => {
             return res.send({
                 message: "This group can't be deleted as this group contains members.",
             });
-        const deletedGroup = await groupSchema.findOneAndDelete({ groupName });
+        await groupSchema.findOneAndDelete({ groupName });
         return res.status(200).send({
             success: true,
             message: `You deleted the group: ${groupName}`,
@@ -142,14 +142,14 @@ const removeUsers = async (req, res) => {
         }
         // Remove user from the group if already present
         if (group.members?.includes(user._id)) {
-            group.members?.remove(user._id);
-            await group.save(); // Save the updated group
+            group.members = group.members.filter((mem) => mem.toString() !== user._id.toString());
         }
         // remove group from the user's group if already present
         if (user.group?.includes(group._id)) {
-            user.group?.remove(group._id);
-            await user.save(); // Save the updated user
+            user.group = user.group.filter((grp) => grp.toString() !== group._id.toString());
         }
+        group.save();
+        user.save();
         return res.status(200).send({
             success: false,
             message: `${userName} removed from ${groupName} successfully.`,
@@ -175,7 +175,7 @@ const provideGroupPermission = async (req, res) => {
             return res.send({ message: "Module does not exist." });
         const existingPermission = await permissionSchema.findOne({
             moduleId: module._id,
-            permissions,
+            permissions: { $all: permissions },
         });
         if (existingPermission)
             return res.send({
@@ -197,82 +197,23 @@ const provideGroupPermission = async (req, res) => {
             return res.send({
                 message: "Error while creating permission for the group.",
             });
-        if (groupPermission)
-            if (!group.permissions?.includes(gPermission._id)) {
-                group.permissions?.push(gPermission._id);
-                await group.save();
-            }
+        if (!group.permissions?.includes(gPermission.id)) {
+            group.permissions?.push(gPermission.id);
+            await group.save();
+        }
         return res.status(200).send({
             success: true,
             message: `Provided permission to ${group.groupName}`,
         });
     }
     catch (error) {
-        return res.status(50).send({
+        return res.status(500).send({
             success: false,
             message: " Error while providing permission to the group",
             error: error.message,
         });
     }
 };
-// const removeGroupPermission = async (
-//   req: Request<GroupPermission>,
-//   res: Response
-// ): Promise<Response> => {
-//   const { groupId } = req.params;
-//   const { moduleId, permissions } = req.body;
-//   if (!groupId || !moduleId || !permissions)
-//     return res.send({ messgae: "Required fields are must." });
-//   try {
-//     // Checking the existance of group
-//     const group = await groupSchema.findById({ _id: groupId });
-//     if (!group) return res.send({ message: "Group does not exist." });
-//     // checking the existance of module
-//     const module = await moduleSchema.findById({ _id: moduleId });
-//     if (!module) return res.send({ message: "Module does not exist." });
-//     // checking the existed permission
-//     const existingPermission = await permissionSchema.findOne({
-//       moduleId: module._id,
-//       permissions,
-//     });
-//     if (!existingPermission)
-//       return res.send({
-//         message: "This permission is not provided for this moduleId.",
-//       });
-//     // if the permission is available, then it would be deleted.
-//     const deletePermission = await permissionSchema.findOneAndDelete({
-//       moduleId: module._id,
-//       permissions,
-//     });
-//     // console.log(deletePermission, "000000000000000000000000");
-//     // the group permission would be deleted.
-//     const gPermission = await groupPermission.findOneAndDelete({
-//       groupId: group._id,
-//       permissions: existingPermission._id,
-//     });
-//     if (!gPermission)
-//       return res.send({
-//         message: "Error in deletation group permission.",
-//       });
-//     console.log(gPermission._id, "111111111111111111111111");
-//     console.log(group.permissions.length, "000000000000000000000000000000000");
-//     let permission = [];
-//     // permission would be removed form the group
-//     if (group.permissions?.includes(gPermission._id)) {
-//       group.permissions?.remove(gPermission._id);
-//     }
-//     console.log(gPermission._id, "222222222222222222222");
-//     return res.status(200).send({
-//       success: true,
-//       message: `Permission removed from ${group.groupName} successfully.`,
-//     });
-//   } catch (error) {
-//     return res.status(500).send({
-//       success: false,
-//       message: "Error while removing permission from the group.",
-//     });
-//   }
-// };
 const removeGroupPermission = async (req, res) => {
     const { groupId } = req.params;
     const { moduleId, permissions } = req.body;
@@ -292,7 +233,7 @@ const removeGroupPermission = async (req, res) => {
         // Checking the existence of the permission
         const existingPermission = await permissionSchema.findOne({
             moduleId: module._id,
-            permissions,
+            permissions: { $all: permissions },
         });
         if (!existingPermission)
             return res.status(404).send({
@@ -312,7 +253,7 @@ const removeGroupPermission = async (req, res) => {
                 message: "Error in deleting group permission.",
             });
         // Removing the permission from the group's permissions array
-        group.permissions = group.permissions.filter((perm) => perm.toString() !== gPermission._id.toString());
+        group.permissions = group.permissions.filter((perm) => perm.toString() !== gPermission.id);
         await group.save();
         return res.status(200).send({
             success: true,

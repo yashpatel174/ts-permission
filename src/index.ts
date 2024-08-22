@@ -5,7 +5,6 @@ import bodyParser from "body-parser";
 import userRoute from "./route/userRoute.js";
 import groupRoute from "./route/groupRoute.js";
 import moduleRoute from "./route/moduleRoute.js";
-// import dataRoute from "./route/dataRoute";
 
 dotenv.config();
 

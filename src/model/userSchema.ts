@@ -15,7 +15,11 @@ const userSchema: mongoose.Schema<Iuser> = new mongoose.Schema({
   role: { type: String, enum: ["admin", "user"], default: "user" },
   group: [{ type: mongoose.Schema.Types.ObjectId, ref: "Group", default: [] }],
   permission: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Permission", default: [] },
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GroupPermission",
+      default: [],
+    },
   ],
 });
 

@@ -1,22 +1,31 @@
 import moduleSchema from "../model/moduleSchema.js";
 import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 
-interface ModuleTypes {
+interface ModuleType {
   moduleName: string;
   moduleNumber: number;
 }
 
-interface UpdateModule {
-  newName: string;
-  newNumber: number;
+interface UpdateModule extends ParamsDictionary {
+  moduleName: string;
 }
 
-interface DelModule {
+interface SingleModule extends ParamsDictionary {
+  moduleName: string;
+}
+
+interface UpdateNew {
+  newName: string;
+  newNumber: string;
+}
+
+interface DelModule extends ParamsDictionary {
   moduleName: string;
 }
 
 const createModule = async (
-  req: Request<ModuleTypes>,
+  req: Request<{}, {}, ModuleType>,
   res: Response
 ): Promise<Response> => {
   const { moduleName, moduleNumber } = req.body;
@@ -64,7 +73,7 @@ const getAllModules = async (
 };
 
 const getSingleModule = async (
-  req: Request<ModuleTypes>,
+  req: Request<SingleModule>,
   res: Response
 ): Promise<Response> => {
   const { moduleName } = req.params;
@@ -91,7 +100,7 @@ const getSingleModule = async (
 };
 
 const updateModule = async (
-  req: Request<ModuleTypes, UpdateModule>,
+  req: Request<UpdateModule, {}, UpdateNew>,
   res: Response
 ): Promise<Response> => {
   const { moduleName } = req.params;
